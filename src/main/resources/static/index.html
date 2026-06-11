@@ -16,6 +16,11 @@
                 border: 1px solid #ccc;
                 padding: 10px;
                 margin-bottom: 10px;
+
+                min-height: 120px;
+
+                background-size: cover;
+                background-position: center;
             }
 
             button {
@@ -53,9 +58,7 @@
                 Total: Rp 0
             </h3>
 
-            <input type="text"
-                   id="namaPembeli"
-                   placeholder="Nama pembeli">
+            <input type="text" id="namaPembeli" placeholder="Nama pembeli">
 
             <br><br>
 
@@ -77,19 +80,34 @@
 
                         data.forEach(menu => {
 
-                            html += `
-                            <div class="menu-card">
-                                <b>${menu.nama}</b><br>
-                                Rp ${menu.harga}<br><br>
+                            let gambar = '';
 
-                                <button onclick="tambahPesanan(
-                                    ${menu.id},
-                                    '${menu.nama}',
-                                    ${menu.harga}
-                                )">
-                                    +
-                                </button>
-                            </div>
+                            if (Number(menu.id) === 1) {
+                                gambar =
+                                        "background-image:url('/images/ayam-bakar.jpeg');" +
+                                        "background-size:cover;" +
+                                        "background-position:center;";
+                            }
+
+                            console.log(
+                                    `<div class="menu-card" style="${gambar}">`
+                                    );
+                            html += `
+                        <div class="menu-card"
+                            style="${gambar}">
+
+                            <b>${menu.nama}</b><br>
+                            Rp ${menu.harga}<br><br>
+
+                            <button onclick="tambahPesanan(
+                                ${menu.id},
+                                '${menu.nama}',
+                                ${menu.harga}
+                            )">
+                                + Pesanan
+                            </button>
+
+                        </div>
                         `;
 
                         });
@@ -97,8 +115,8 @@
                         document.getElementById('menu-list').innerHTML = html;
 
                     });
-                    
-                    
+
+
 
             function tambahPesanan(id, nama, harga) {
 
@@ -126,11 +144,11 @@
                 keranjang.forEach(item => {
 
                     html += `
-                        <div>
-                            ${item.nama}
-                            x ${item.qty}
-                        </div>
-                    `;
+                            <div>
+                                ${item.nama}
+                                x ${item.qty}
+                            </div>
+                        `;
 
                     total += item.harga * item.qty;
 
