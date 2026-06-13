@@ -10,15 +10,109 @@
                 font-family: Arial, sans-serif;
                 margin: 20px;
             }
+            .pending {
+                background: #FFD54F;
+                color: black;
+
+                padding: 5px 10px;
+                border-radius: 5px;
+
+                display: inline-block;
+                font-weight: bold;
+            }
+            .paid {
+                background: #4CAF50;
+                color: white;
+
+                padding: 5px 10px;
+                border-radius: 5px;
+
+                display: inline-block;
+                font-weight: bold;
+            }
 
             .order-card {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+
                 border: 1px solid #ccc;
-                padding: 10px;
+                padding: 15px;
                 margin-bottom: 10px;
             }
 
-            .pending {
-                color: red;
+            .order-info {
+                flex: 1;
+                cursor: pointer;
+            }
+
+            .order-action button {
+                padding: 10px 20px;
+            }
+
+            .navbar-status {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .navbar-status button {
+                flex: 1;
+                padding: 12px;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+            }
+            /* Tab aktif */
+            #btn-paid.active {
+                background: #4CAF50;
+                color: white;
+                border-color: #4CAF50;
+            }
+
+            #btn-pending.active {
+                background: #FFD54F;
+                color: black;
+                border-color: #FFD54F;
+            }
+
+            /* Tab tidak aktif */
+            .navbar-status button {
+                flex: 1;
+                height: 50px;
+
+                background: white;
+                color: black;
+
+                border: 3px solid black;
+                border-radius: 8px;
+
+                font-size: 18px;
+                font-weight: bold;
+
+                cursor: pointer;
+            }
+
+            #btn-paid,
+            #btn-pending {
+                flex: 1;
+                height: 50px;
+
+                border: 3px solid black;
+                background: white;
+
+                font-size: 18px;
+                font-weight: bold;
+            }
+
+            #btn-refresh {
+                width: 120px;
+                height: 50px;
+
+                border: 3px solid black;
+                background: #4CAF50;
+                color: white;
+
+                font-size: 18px;
                 font-weight: bold;
             }
         </style>
@@ -27,6 +121,20 @@
     <body>
 
         <h1>Admin Raja Ayam</h1>
+
+        <div class="navbar-status">
+
+            <button id="btn-paid"
+                    onclick="loadPaid()">
+                Paid
+            </button>
+
+            <button id="btn-pending"
+                    onclick="loadPending()">
+                Pending
+            </button>
+
+        </div>
 
         <div id="order-list">
             Memuat pesanan...
@@ -41,6 +149,7 @@
 
         <script>
 
+
             function lihatDetail(orderId, customerName) {
 
                 fetch('/api/orders/' + orderId + '/items')
@@ -48,18 +157,18 @@
                         .then(data => {
 
                             let html = `
-                <h3>Order #${orderId}</h3>
-                <p>Nama: ${customerName}</p>
-                <hr>
-            `;
+                    <h3>Order #${orderId}</h3>
+                    <p>Nama: ${customerName}</p>
+                    <hr>
+                `;
 
                             data.forEach(item => {
 
                                 html += `
-                    <p>
-                        ${item.nama} x${item.qty}
-                    </p>
-                `;
+                        <p>
+                            ${item.nama} x${item.qty}
+                        </p>
+                    `;
 
                             });
 
@@ -71,40 +180,199 @@
 
             }
 
-            fetch('/api/orders')
-                    .then(response => response.json())
-                    .then(data => {
+            function loadPending() {
 
-                        let html = '';
+                document.getElementById("btn-pending")
+                        .classList.add("active");
 
-                        data.forEach(order => {
+                document.getElementById("btn-paid")
+                        .classList.remove("active");
 
-                            html += `
-                <div class="order-card"
-                     onclick="lihatDetail(${order.id}, '${order.customerName}')">
+                fetch('/api/orders')
+                        .then(response => response.json())
+                        .then(data => {
 
-                    <h3>
-                        #${order.id} - ${order.customerName}
-                    </h3>
+                            let html = '';
 
-                    <p>
-                        Total: Rp ${order.total}
-                    </p>
+                            data.forEach(order => {
 
-                    <p class="pending">
-                        ${order.status}
-                    </p>
+                                if (order.status !== 'PENDING') {
+                                    return;
+                                }
 
-                </div>
-            `;
+                                html += buatCard(order);
+
+                            });
+
+                            document.getElementById(
+                                    'order-list'
+                                    ).innerHTML = html;
 
                         });
 
-                        document.getElementById(
-                                'order-list'
-                                ).innerHTML = html;
+            }
 
-                    });
+
+            function loadPaid() {
+                document.getElementById("btn-paid")
+                        .classList.add("active");
+
+                document.getElementById("btn-pending")
+                        .classList.remove("active");
+
+                fetch('/api/orders')
+                        .then(response => response.json())
+                        .then(data => {
+
+                            let html = '';
+
+                            data.forEach(order => {
+
+                                if (order.status !== 'PAID') {
+                                    return;
+                                }
+
+                                html += buatCard(order);
+
+                            });
+
+                            document.getElementById(
+                                    'order-list'
+                                    ).innerHTML = html;
+
+                        });
+
+            }
+
+            function buatCard(order) {
+
+                let tombol = '';
+
+                if (order.status === 'PENDING') {
+                    tombol = `
+            <button
+                onclick="event.stopPropagation();
+                         bayar(${order.id})">
+                Bayar
+            </button>
+        `;
+                }
+
+                if (order.status === 'PAID') {
+                    tombol = `
+            <button
+                onclick="event.stopPropagation();
+                         selesai(${order.id})">
+                Selesai
+            </button>
+        `;
+                }
+
+                return `
+        <div class="order-card">
+
+            <div class="order-info"
+                 onclick="lihatDetail(
+                     ${order.id},
+                     '${order.customerName}'
+                 )">
+
+                <h3>#${order.id} - ${order.customerName}</h3>
+
+                <p>Total: Rp ${order.total}</p>
+
+                <p>${order.status}</p>
+
+            </div>
+
+            <div class="order-action">
+                ${tombol}
+            </div>
+
+        </div>
+    `;
+            }
+            function buatCard(order) {
+
+                let tombol = '';
+
+                if (order.status === 'PENDING') {
+                    tombol = `
+            <button
+                onclick="event.stopPropagation();
+                         bayar(${order.id})">
+                Bayar
+            </button>
+        `;
+                }
+
+                if (order.status === 'PAID') {
+                    tombol = `
+            <button
+                onclick="event.stopPropagation();
+                         selesai(${order.id})">
+                Selesai
+            </button>
+        `;
+                }
+
+                return `
+        <div class="order-card">
+
+            <div class="order-info"
+                 onclick="lihatDetail(
+                     ${order.id},
+                     '${order.customerName}'
+                 )">
+
+                <h3>#${order.id} - ${order.customerName}</h3>
+
+                <p>Total: Rp ${order.total}</p>
+
+                <p>${order.status}</p>
+
+            </div>
+
+            <div class="order-action">
+                ${tombol}
+            </div>
+
+        </div>
+    `;
+            }
+
+            function bayar(orderId) {
+
+                fetch('/api/orders/' + orderId + '/paid', {
+                    method: 'PUT'
+                })
+                        .then(response => response.text())
+                        .then(data => {
+
+                            loadPending();
+
+                        });
+
+            }
+            function selesai(orderId) {
+
+                fetch(
+                        '/api/orders/' + orderId + '/completed',
+                        {
+                            method: 'PUT'
+                        }
+                )
+                        .then(response => response.text())
+                        .then(data => {
+
+
+                            loadPaid();
+
+                        });
+
+            }
+
+            loadPaid();
 
         </script>
 

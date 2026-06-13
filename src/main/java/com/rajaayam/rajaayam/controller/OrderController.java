@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
@@ -28,18 +29,16 @@ public class OrderController {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final MenuRepository menuRepository;
-    
-    
 
     public OrderController(
-        OrderRepository orderRepository,
-        OrderItemRepository orderItemRepository,
-        MenuRepository menuRepository) {
+            OrderRepository orderRepository,
+            OrderItemRepository orderItemRepository,
+            MenuRepository menuRepository) {
 
-    this.orderRepository = orderRepository;
-    this.orderItemRepository = orderItemRepository;
-    this.menuRepository = menuRepository;
-}
+        this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
+        this.menuRepository = menuRepository;
+    }
 
     @GetMapping("/api/orders")
     public List<Order> getOrders() {
@@ -70,37 +69,71 @@ public class OrderController {
         return "OK";
     }
 
-    @GetMapping("/api/orders/{id}/items")
-public List<OrderItemResponse> getOrderItems(
-        @PathVariable Long id) {
+    @PutMapping("/api/orders/{id}/paid")
+    public String bayarOrder(@PathVariable Long id) {
 
-    List<OrderItem> items =
-            orderItemRepository.findByOrderId(id);
+        Order order = orderRepository.findById(id)
+                .orElse(null);
 
-    List<OrderItemResponse> result =
-            new ArrayList<>();
+        if (order == null) {
+            return "Order tidak ditemukan";
+        }
 
-    for (OrderItem item : items) {
+        order.setStatus("PAID");
 
-        Menu menu =
-                menuRepository.findById(
-                        item.getMenuId())
-                        .orElse(null);
+        orderRepository.save(order);
 
-        OrderItemResponse response =
-                new OrderItemResponse();
-
-        response.setNama(
-                menu.getNama());
-
-        response.setQty(
-                item.getQty());
-
-        result.add(response);
+        return "OK";
     }
 
-    return result;
-}
+    @PutMapping("/api/orders/{id}/completed")
+    public String selesaiOrder(@PathVariable Long id) {
+
+        Order order = orderRepository.findById(id)
+                .orElse(null);
+
+        if (order == null) {
+            return "Order tidak ditemukan";
+        }
+
+        order.setStatus("COMPLETED");
+
+        orderRepository.save(order);
+
+        return "OK";
+    }
+
+    @GetMapping("/api/orders/{id}/items")
+    public List<OrderItemResponse> getOrderItems(
+            @PathVariable Long id) {
+
+        List<OrderItem> items
+                = orderItemRepository.findByOrderId(id);
+
+        List<OrderItemResponse> result
+                = new ArrayList<>();
+
+        for (OrderItem item : items) {
+
+            Menu menu
+                    = menuRepository.findById(
+                            item.getMenuId())
+                            .orElse(null);
+
+            OrderItemResponse response
+                    = new OrderItemResponse();
+
+            response.setNama(
+                    menu.getNama());
+
+            response.setQty(
+                    item.getQty());
+
+            result.add(response);
+        }
+
+        return result;
+    }
 
     @PostMapping("/api/orders")
     public String createOrder(
